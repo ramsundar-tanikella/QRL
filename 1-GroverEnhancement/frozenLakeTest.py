@@ -1,10 +1,10 @@
-import gym
+import gymnasium as gym
 from groverMazeLearner import GroverMazeLearner
 
 # test
 if __name__ == "__main__":
     # choose env
-    envtest = gym.make("FrozenLake-v0", is_slippery=False)
+    envtest = gym.make("FrozenLake-v1", is_slippery=False)
     # init learner
     Elliot = GroverMazeLearner(envtest)
     # good hyperparms (hand-tuned)
@@ -12,7 +12,7 @@ if __name__ == "__main__":
               'alpha': 0.1,
               'gamma': 0.99,
               'eps': 0.01,
-              'max_epochs': 3000,
+              'max_epochs': 1000,
               'max_steps': 15,
               'graphics': False}
     # set hyperparms
@@ -22,18 +22,18 @@ if __name__ == "__main__":
     trajectories = Elliot.train()
 
     # Show trajectories
-    for key in trajectories.keys():
-        print(key, trajectories[key])
+    # for key in trajectories.keys():
+    #     print(key, trajectories[key])
 
-    # final state values
-    print(Elliot.state_vals.reshape((4, 4)))
+    # # final state values
+    # print(Elliot.state_vals.reshape((4, 4)))
 
-    # grover flags
-    for state, flag in enumerate(Elliot.grover_steps_flag):
-        print(state, '\t', flag)
+    # # grover flags
+    # for state, flag in enumerate(Elliot.grover_steps_flag):
+    #     print(state, '\t', flag)
 
-    # state-action circuits
-    for s, circ in enumerate(Elliot.acts_circs):
-        print('action circuit for state ', s)
-        print(circ.draw())
+    # # state-action circuits
+    # for s, circ in enumerate(Elliot.acts_circs):
+    #     print('action circuit for state ', s)
+    #     print(circ.draw())
 

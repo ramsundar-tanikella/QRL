@@ -4,6 +4,8 @@ from qiskit import *
 from qiskit.circuit.library import GroverOperator
 from qiskit.quantum_info import Statevector
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 from math import ceil
 
 
@@ -32,7 +34,8 @@ class GroverMazeLearner:
         self.hyperparams = {'k': -1, 'alpha': 0.05, 'gamma': 0.99, 'eps': 0.01, 'max_epochs': 1000, 'max_steps': 100
                             , 'graphics': True}
         # current state
-        self.state = self.env.reset()
+        self.state, info = self.env.reset()
+        #print("self.state inside init: ",self.state)
         # current action
         self.action = 0
         # list of grover oracles
@@ -67,6 +70,9 @@ class GroverMazeLearner:
         :param new_state: state reached upon taking previous action
         :return:
         """
+        #print("self.state inside update intervals: ",self.state)
+        #print("gamma: ",self.hyperparams['gamma'])
+        #print("self.state_vals: ",self.state_vals[new_state])
         self.state_vals[self.state] += self.hyperparams['alpha']*(reward
                                                                   + self.hyperparams['gamma']*self.state_vals[new_state]
                                                                   - self.state_vals[self.state])
@@ -126,6 +132,8 @@ class GroverMazeLearner:
         Measures the state-action circuit corresponding to current state and decides next action
         :return: action to be taken, int
         """
+        #print('state: {}'.format(self.state))
+        #print('state: ',self.state)
         circ = self.acts_circs[self.state]
         circ_tomeasure = circ.copy()
         circ_tomeasure.measure_all()
@@ -147,27 +155,28 @@ class GroverMazeLearner:
         dictionary of trajectories
         """
         traj_dict = {}
-
+        arr = []
         # set initial max_steps
         optimal_steps = self.hyperparams['max_steps']
-
+        cnt = 0
         for epoch in range(self.hyperparams['max_epochs']):
             if epoch % 10 == 0:
                 print("Processing epoch {} ...".format(epoch))
             # reset env
-            self.state = self.env.reset()
+            self.state, info = self.env.reset()
             # init list for traj
             traj = [self.state]
-
+            rewards_arr = []
             if self.hyperparams['graphics']:
                 self.env.render()
             for step in range(optimal_steps):
-                print('Taking step {0}/{1}'.format(step, optimal_steps), end='\r')
+                #print('Taking step {0}/{1}'.format(step, optimal_steps), end='\r')
                 # print('STATE: ', self.state)
                 # Select action
+                cnt = cnt + 1
                 self.action = self._take_action()
                 # take action
-                new_state, reward, done, _ = self.env.step(self.action)
+                new_state, reward, done, info, _ = self.env.step(self.action)
                 if new_state == self.state:
                     reward -= 10
                     done = True
@@ -177,7 +186,8 @@ class GroverMazeLearner:
                     optimal_steps = step + 1
                 elif not done:
                     reward -= 1
-                # print('REWARD: ', reward)
+                #print(' REWARD: ', reward)
+                rewards_arr.append(reward)
                 # update statevals and grover steps
                 self._update_statevals(reward, new_state)
                 self.grover_steps[self.state, self.action] = self._eval_grover_steps(reward, new_state)
@@ -196,8 +206,16 @@ class GroverMazeLearner:
                 self.state = new_state
                 # print('STATE_VALS: ', self.state_vals)
                 # print('GROVER_STEPS: ', self.grover_steps)
-
+            print("average rewards: ", np.average(rewards_arr))
+            arr.append(np.average(rewards_arr))
             traj_dict['epoch_{}'.format(epoch)] = traj
-
+        
+        
+        #arr.append(np.average(rewards_arr))
+        numbers_series = pd.Series(arr)
+        rolling_mean = numbers_series.rolling(100).mean()
+        print("rolling mean: ",rolling_mean)
+        plt.plot(rolling_mean)
+        plt.show()
         # return trajectories
         return traj_dict
