@@ -32,7 +32,7 @@ class GroverMazeLearner:
         self.hyperparams = {'k': -1, 'alpha': 0.05, 'gamma': 0.99, 'eps': 0.01, 'max_epochs': 1000, 'max_steps': 100
                             , 'graphics': True}
         # current state
-        self.state = self.env.reset()
+        self.state, info = self.env.reset()
         # current action
         self.action = 0
         # list of grover oracles
@@ -155,7 +155,7 @@ class GroverMazeLearner:
             if epoch % 10 == 0:
                 print("Processing epoch {} ...".format(epoch))
             # reset env
-            self.state = self.env.reset()
+            self.state, info = self.env.reset()
             # init list for traj
             traj = [self.state]
 
@@ -167,7 +167,7 @@ class GroverMazeLearner:
                 # Select action
                 self.action = self._take_action()
                 # take action
-                new_state, reward, done, _ = self.env.step(self.action)
+                new_state, reward, done, info, _ = self.env.step(self.action)
                 if new_state == self.state:
                     reward -= 10
                     done = True
