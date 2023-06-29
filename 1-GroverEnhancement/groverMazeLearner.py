@@ -35,7 +35,9 @@ class GroverMazeLearner:
                             , 'graphics': True}
         # current state
         self.state, info = self.env.reset()
+
         #print("self.state inside init: ",self.state)
+
         # current action
         self.action = 0
         # list of grover oracles
